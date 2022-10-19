@@ -1,0 +1,62 @@
+applications:
+- guillotina.contrib.redis
+- guillotina.contrib.cache
+- guillotina.contrib.pubsub
+- guillotina.contrib.swagger
+- guillotina_elasticsearch
+- guillotina_gcloudstorage
+- guillotina_stripe
+- guillotina.contrib.email_validation
+- guillotina.contrib.mailer
+- fentpais
+allow_register: true
+cache:
+  driver: guillotina.contrib.redis
+  updates_channel: guillotina
+auth_extractors:
+- guillotina.auth.extractors.BearerAuthPolicy
+- guillotina.auth.extractors.BasicAuthPolicy
+- guillotina.auth.extractors.WSTokenAuthPolicy
+auth_token_validators:
+- guillotina.auth.validators.JWTValidator
+- guillotina.auth.validators.SaltedHashPasswordValidator
+databases:
+  data:
+    storage: postgresql
+    transaction_strategy: dbresolve_readcommitted
+    dsn: postgresql://postgres:postgres@127.0.0.1:5433/data?sslmode=disable
+    pool_size: 40
+    autovacuum: true
+    read_only: false
+    statement_cache_size: 100
+    max_cached_statement_lifetime: 300
+store_json: true
+host: 0.0.0.0
+port: 8080
+redis:
+  host: 127.0.0.1
+  port: 6379
+root_user:
+  password: d0CsB4Rc3L0n4
+jwt:
+  secret: 'BId6BZL6EQp77shvdy1pTty1bVwRqQg80Bnve26gsb6'
+  exp: 43200
+  algorithm": "HS256"
+cors:
+  allow_origin:
+  - http://localhost:3000
+  - http://localhost:8000
+  allow_methods:
+  - GET
+  - POST
+  - DELETE
+  - HEAD
+  - PATCH
+  - PUT
+  - OPTIONS
+  allow_headers:
+  - "*"
+  expose_headers:
+  - "*"
+  allow_credentials: true
+  max_age: 3660
