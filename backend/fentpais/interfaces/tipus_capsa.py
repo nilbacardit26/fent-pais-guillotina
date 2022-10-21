@@ -2,8 +2,14 @@ from guillotina import interfaces, schema
 
 
 class ITipusCapsaFolder(interfaces.IFolder):
-    pass
+    async def get_experiencies():
+        """
+        Get all experiences
+        """
 
 
 class ITipusCapsa(interfaces.IFolder):
-    pass
+    async def get_experiencies():
+        """
+        Get experiences of the capsa
+        """
