@@ -6,4 +6,4 @@ class IReservesFolder(interfaces.IFolder):
 
 
 class IReserva(interfaces.IItem):
-    pass
+    tipus_capsa = schema.TextLine()

@@ -13,3 +13,7 @@ class ITipusCapsa(interfaces.IFolder):
         """
         Get experiences of the capsa
         """
+
+    nom = schema.Text(required=True)
+
+    descripcio = schema.TextLine(required=True)

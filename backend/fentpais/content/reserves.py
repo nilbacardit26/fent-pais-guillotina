@@ -1,7 +1,16 @@
 from guillotina import app_settings, configure, content
-from fentpais.interfaces.reserves import IReservesFolder, IReserva
+from guillotina.response import HTTPPreconditionFailed
+from fentpais.interfaces.reserves import (
+    IReservesFolder,
+    IReserva
+)
+from guillotina.interfaces import (
+    IObjectAddedEvent,
+    IObjectModifiedEvent
+)
 from guillotina.component import query_utility
 from guillotina.interfaces.catalog import ICatalogUtility
+from guillotina.utils import get_current_container
 
 
 @configure.contenttype(
@@ -28,4 +37,16 @@ class ReservesFolder(content.Folder):
     globally_addable=False
 )
 class Reserva(content.Item):
-    pass
+    async def check_tipus_capsa(self):
+        search_instance = query_utility(ICatalogUtility)
+        container = get_current_container()
+        tipus_capsa_folder = await container.async_get("tipus_capsa")
+        results = await search_instance.unrestrictedSearch(context=tipus_capsa_folder, query={"id": self.tipus_capsa})
+        if results["items_total"] == 0:
+            raise HTTPPreconditionFailed()
+
+
+@configure.subscriber(for_=(IReserva, IObjectAddedEvent))
+@configure.subscriber(for_=(IReserva, IObjectModifiedEvent))
+async def creacio_modificacio_reserva(obj, event):
+    await obj.check_tipus_capsa()

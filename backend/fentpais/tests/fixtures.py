@@ -48,4 +48,33 @@ async def fentpais(db, guillotina):
             "id": "container",
         }))
     assert status == 200
-    yield guillotina
+
+    resp, status = await guillotina(
+        'POST', '/db/container/@addons',
+        data=json.dumps({
+            "id": "dbusers",
+        }))
+    assert status == 200
+
+    resp, status = await guillotina(
+        'POST', '/db/container/users',
+        data=json.dumps({
+            "@type": "User",
+            "id": "foo_member",
+            "username": "foo_member",
+            "password": "foo_password",
+            "user_roles": ["guillotina.Member"],
+            "email": "foo_member@iskra.cat",
+            "name": "foo_member"
+        }))
+    assert status == 201
+
+    resp, status = await guillotina(
+        'POST', '/db/container/@login',
+        authenticated=False,
+        data=json.dumps({
+            "username": "foo_member",
+            "password": "foo_password"
+        }))
+    assert status == 200
+    yield guillotina, resp["token"]

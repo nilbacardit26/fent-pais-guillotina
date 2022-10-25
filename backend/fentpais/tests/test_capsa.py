@@ -6,24 +6,30 @@ pytestmark = pytest.mark.asyncio
 
 
 async def test_creacio_capsa(fentpais):
+    fentpais, token = fentpais
     resp, status = await fentpais(
         'POST',
         '/db/container/tipus_capsa',
         data=json.dumps({
             "id": "foo_tipus_capsa",
-            "@type": "TipusCapsa"
+            "@type": "TipusCapsa",
+            "nom": "tipus a",
+            "descripcio": "Aquesta capsa conté experiencies"
         })
     )
     assert status == 201
 
 
 async def test_creacio_experiencia(fentpais):
+    fentpais, token = fentpais
     resp, status = await fentpais(
         'POST',
         '/db/container/tipus_capsa',
         data=json.dumps({
             "id": "foo_tipus_capsa",
-            "@type": "TipusCapsa"
+            "@type": "TipusCapsa",
+            "nom": "tipus a",
+            "descripcio": "Aquesta capsa conté experiencies"
         })
     )
     assert status == 201
@@ -33,19 +39,25 @@ async def test_creacio_experiencia(fentpais):
         '/db/container/tipus_capsa/foo_tipus_capsa',
         data=json.dumps({
             "id": "experiencia1",
-            "@type": "Experiencia"
+            "@type": "Experiencia",
+            "nom": "tipus a",
+            "descripcio": "Aquesta capsa conté experiencies",
+            "categories": ["categoria1", "categoria2"]
         })
     )
     assert status == 201
 
 
 async def test_tipus_capsa_get_experiencies_endpoint(fentpais):
+    fentpais, token = fentpais
     resp, status = await fentpais(
         'POST',
         '/db/container/tipus_capsa',
         data=json.dumps({
             "id": "foo_tipus_capsa",
-            "@type": "TipusCapsa"
+            "@type": "TipusCapsa",
+            "nom": "tipus a",
+            "descripcio": "Aquesta capsa conté experiencies"
         }),
         headers={"X-Wait": "10"}
     )
@@ -55,8 +67,10 @@ async def test_tipus_capsa_get_experiencies_endpoint(fentpais):
         'POST',
         '/db/container/tipus_capsa',
         data=json.dumps({
-            "id": "foo_tipus_capsa_2",
-            "@type": "TipusCapsa"
+            "id": "foo_capsa_tipus2",
+            "@type": "TipusCapsa",
+            "nom": "tipus a",
+            "descripcio": "Aquesta capsa conté experiencies"
         }),
         headers={"X-Wait": "10"}
     )
@@ -67,7 +81,10 @@ async def test_tipus_capsa_get_experiencies_endpoint(fentpais):
         '/db/container/tipus_capsa/foo_tipus_capsa',
         data=json.dumps({
             "id": "experiencia1",
-            "@type": "Experiencia"
+            "@type": "Experiencia",
+            "nom": "tipus a",
+            "descripcio": "Aquesta capsa conté experiencies",
+            "categories": ["categoria1", "categoria2"]
         }),
         headers={"X-Wait": "10"}
     )
@@ -75,10 +92,13 @@ async def test_tipus_capsa_get_experiencies_endpoint(fentpais):
 
     resp, status = await fentpais(
         'POST',
-        '/db/container/tipus_capsa/foo_tipus_capsa_2',
+        '/db/container/tipus_capsa/foo_capsa_tipus2',
         data=json.dumps({
             "id": "experiencia",
-            "@type": "Experiencia"
+            "@type": "Experiencia",
+            "nom": "tipus a",
+            "descripcio": "Aquesta capsa conté experiencies",
+            "categories": ["categoria1", "categoria2"]
         }),
         headers={"X-Wait": "10"}
     )
