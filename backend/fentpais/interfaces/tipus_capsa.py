@@ -17,3 +17,5 @@ class ITipusCapsa(interfaces.IFolder):
     nom = schema.Text(required=True)
 
     descripcio = schema.TextLine(required=True)
+
+    preu = schema.Float(required=True)

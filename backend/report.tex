@@ -1,0 +1,526 @@
+% LaTeX Template for short student reports.
+% Citations should be in bibtex format and go in references.bib
+\documentclass[a4paper, 11pt]{article}
+\usepackage[top=3cm, bottom=3cm, left = 2cm, right = 2cm]{geometry} 
+\geometry{a4paper} 
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\usepackage{graphicx} 
+\usepackage{amsmath,amssymb}  
+\usepackage{bm}  
+\usepackage[pdftex,bookmarks,colorlinks,breaklinks]{hyperref}  
+%\hypersetup{linkcolor=black,citecolor=black,filecolor=black,urlcolor=black} % black links, for printed output
+\usepackage{memhfixc} 
+\usepackage{pdfsync}  
+\usepackage{fancyhdr}
+\usepackage{listings}
+
+\pagestyle{fancy}
+
+\title{Backend Fent País}
+\author{Iskra Desenvolupament}
+%\date{}
+
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{python}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=python}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Introducció}
+Ens han encarregat renovar el backend de Fent País, i els nostre
+arquitecte ens ha recomanat fer servir Guillotina. Fent País és un
+servei que permet fer reserves de capses regals. Una capsa regal està
+formada per N experiències, l'usuari pot triar una d'aquestes
+experiències.
+
+\section{Entorn de treball}
+Farem servir un entorn virtual de python, necessitem python3, des del
+directori on hi ha setup.py.
+
+\begin{lstlisting}[language=Python, caption=Entorn virtual]
+  pytho3 -m venv venv
+  source venv/bin/activate
+  pip install -r requirements.txt
+  pip install -r requirements-test.txt
+  pip install -e .
+\end{lstlisting}
+
+Això instal·larà les dependències necessàries i el paquet de fentpais
+en mode desenvolupament. El codi està tot fet, només haureu d'anar
+descomentant les línies.
+
+\section{Breu Explicació de traversal i guillotina}
+Guillotina és un traversal. És com un arbre o similar al sistema de
+fitxers UNIX, organitzats en carpetes i paths. En el cas de
+guillotina, cada url mapeja un objecte diferent.
+
+Guillotina té l'estructua bàsica següent:
+\begin{lstlisting}
+  db/container/{objecte}
+\end{lstlisting}
+
+\textbf{db}: La base de dades
+
+\textbf{container}: La primera gran carpeta del sistema de tipus
+IContainer. Sempre n'hi ha d'haver un com a mínim
+\subsection{Arquitectura}
+L'arquitectura més basica que fa servir guillotina és:
+\begin{enumerate}
+\item \textbf{Postgresql}: Base de dades relacional
+\item \textbf{Redis}: Base de dades key value en memòria
+\end{enumerate}
+En el nostre cas, la postgres ens servirà de base de dades i de
+catàleg, que vol dir que podrem indexar els nostres objectes per
+cercar-los ràpidament. Podríem tenir un ElasticSearch també, però en
+aquest cas farem servir la mateixa postgres.
+
+
+\section{Requeriments del sistema}
+\subsection{Traversal}
+\begin{enumerate}
+\item Creació de la carpeta \textbf{db/container/tipus\_capsa} quan es crea el container
+\item Creació de la carpeta \textbf{db/container/reserves} quan es crea el container
+\item Creació de l'endpoint \@getExperiencies en el context de la
+  carpeta \\ \textbf{db/container/tipus\_capsa/\@getExperiencies}. Aquest
+  endpoint ha de retornar totes les experiències de tots els tipus
+  de capsa
+\item Creació de l'endpoint @getExperiencies en el context de la
+  carpeta \\
+  \textbf{db/container/tipus\_cpasa/foo\_tipus\_capsa/\@getExperiencies}. Aquest
+  endpoint ha de retornar totes les experiències només de la capsa
+  foo\_tipus\_capsa
+\item Quan es crea una reserva, comprovar que el tipus de capsa
+  existeix, si no existeix anul·lar la reserva i retornar un \textbf{412}
+\item Un usuari/client només podrà crear reserves. No podrà afegir
+  tipus\_capsa ni experiències, però sí que les podrà veure
+\item Només un usuari root podrà crear tipus de capsa i experiencies
+\item El sistema ha de tenir tests i testejar totes les funcionalitats
+\end{enumerate}
+
+\pagebreak
+\section{Disseny}
+\subsection{Traversal} 
+Tenint en compte els requeriments del sistema, tindrem una estructura
+de dades i de traversal com la següent.
+\begin{lstlisting}[language=Python, caption=Estructura dades]
+  /db/container/tipus_capsa/foo_tipus_capsa/foo_experiencia_1
+  /db/container/tipus_capsa/foo_tipus_capsa/foo_experiencia_N
+  /db/container/tipus_capsa/foo_tipus_capsa/@getExperiencies
+  /db/container/tipus_capsa/@getExperiencies
+  /db/container/tipus_capsa/foo_tipus_capsa_N/foo_experiencia_N
+  /db/container/tipus_capsa/reserves/foo_reserva_1
+  /db/container/tipus_capsa/reserves/foo_reserva_N
+  /db/container/tipus_capsa/users/foo_user
+\end{lstlisting}
+
+Reserves i tipus\_capsa són carpetes, i dintre d'aquestes carpetes hi
+haurà objectes de tipus reserva i experiència respectivament. La
+carpeta users contindrà objectes de tipus User.
+
+\subsection{Interfícies}
+Les interfícies defineixen els camps dels objectes. També es poden
+definir mètodes o corutines, sense la seva implementació. Les
+interfícies ja estan definides dintre de la carpeta
+\textbf{interfaces}
+
+\subsubsection{Reserves: interfaces/reserves.py}
+Definim les interfícies per la carpeta reserves i el tipus
+reserva. Veim que la reserva només té un camp, el tipus\_capsa, que
+serà l'id d'un objecte tipus\_capsa que referenciarà la capsa.
+\begin{lstlisting}[language=Python, caption=Estructura dades]
+  from guillotina import interfaces, schema
+
+  class IReservesFolder(interfaces.IFolder):
+    pass
+
+
+  class IReserva(interfaces.IItem):
+    tipus_capsa = schema.TextLine()
+  \end{lstlisting}
+
+
+\subsubsection{Experiencies: interfaces/experiencia.py}
+\begin{lstlisting}[language=Python, caption=Estructura dades]
+  class IExperiencia(interfaces.IItem):
+    index_field("nom", type="text")
+    nom = schema.TextLine(required=True)
+
+    index_field("description", type="text")
+    descripcio = schema.TextLine(required=True)
+
+    categories = schema.List(
+        title="Categories",
+        description="Categories de la experiencia",
+        value_type=schema.TextLine(),
+        required=False
+    )
+  \end{lstlisting}
+  Experiència tindrà un nom, una descripció i una llista de
+  categories. El mètode index\_field indexa aquest camp al catàleg, en
+  aquest cas a la Postgres
+
+
+  El següent codi indexa el camp categories, que és una llista, com un
+  string de paraules. Normalment, sempre que indexem dades més
+  complexes, les serialitzem
+  \begin{lstlisting}[language=Python, caption=Estructura dades]
+  @directives.index_field.with_accessor(
+    IExperiencia,
+    "categories",
+    type="text",
+    field="categories",
+    store=True
+    )
+    async def index_tests_respondre(obj):
+       results = ""
+    for category in obj.categories:
+       results = results + category
+       if results != "":
+           return results
+         \end{lstlisting}
+         @directives no és una interfície com a tal, podríem
+         definir-la en un altre fitxer, però en aquest cas ho he fet
+         en el mateix fitxer \textbf{experiencia.py}
+
+\subsubsection{Experiencies: interfaces/tipus\_capsa.py}
+    \begin{lstlisting}[language=Python, caption=Estructura dades]
+  from guillotina import interfaces, schema
+
+
+class ITipusCapsaFolder(interfaces.IFolder):
+    async def get_experiencies():
+        """
+        Get all experiences
+        """
+
+
+class ITipusCapsa(interfaces.IFolder):
+    async def get_experiencies():
+        """
+        Get experiences of the capsa
+        """
+
+    nom = schema.Text(required=True)
+
+    descripcio = schema.TextLine(required=True)
+
+    preu = schema.Float(required=True)
+  \end{lstlisting}
+
+  Tipus capsa té un nom, una descripció i un preu. També definim la
+  interfície de dos corutines, get\_experiencies pels dos objectes.
+
+
+\pagebreak
+
+\section{Desenvolupament}
+En aquesta secció anirem descomentant el codi, i provant les diferents
+funcionalitats.
+\subsection{Definició del container}
+Primer definirem quins tipus hi poden haver dintre del container. Com
+hem vist en els requeriments, les carpetes que podrem afegir són
+ReservesFolder i TipusCapsaFolder. Per fer-ho descomentarem les línies
+que hi ha entre el comentari \textbf{TODO\_1} i \textbf{END\_TODO\_1}
+del fitxer \textbf{container.py}, fent servir la directiva
+\textbf{@configure.contenttype} per configurar el tipus, el camp
+\textbf{allowed\_types}. El camp behaviors ens permet tenir camps
+extres que ja venen configurats pel mateix behavior.
+
+\begin{lstlisting}[language=Python, caption=Definició container]
+@configure.contenttype(
+    type_name="Container",
+    schema=IContainer,
+    behaviors=[
+        'guillotina.behaviors.dublincore.IDublinCore'
+    ],
+    allowed_types=["ReservesFolder", "TipusCapsaFolder"]
+)
+class Container(Container):
+  pass
+\end{lstlisting}
+
+
+\subsection{Creació de les carpetes reserves i tipus\_capsa}
+Començarem creant les dues carpetes reserves i tipus\_capsa
+automàticament quan es crea el container. Per fer això descomentarem
+les línies que hi ha entre el comentari \textbf{TODO\_2} i
+\textbf{END\_TODO\_2} del fitxer \textbf{container.py}
+
+Si us hi fixeu, hi ha un decorador configurant un subscriber:
+\begin{lstlisting}[language=Python, caption=Subscriber container]
+  @configure.subscriber(for_=(IContainer, IObjectAddedEvent))
+\end{lstlisting}
+Això fa executar la corutina \textbf{creacio\_container} sempre que un objecte
+de tipus IContainer es crea.
+  
+Les línies que heu de descomentar el que fan és crear la carpeta amb
+id reserves del tipus ReservesFolder. Finalment notifiquem que hem
+creat una carpeta de tipus ReservesFolder, perquè altres subscribers
+es puguin beneficiar de la creació de la carpeta.
+\begin{lstlisting}[language=Python, caption=Creació reserves folder]
+  reserves_folder = await create_content_in_container(
+        parent=obj,
+        type_="ReservesFolder",
+        check_security=False,
+        id_="reserves",
+        title="Reserves' folder"
+    )
+    await notify(ObjectAddedEvent(reserves_folder, reserves_folder, reserves_folder.id))
+\end{lstlisting}
+
+El següent codi crea la carpeta tipus\_capsa del tipus TipusCapsaFolder
+\begin{lstlisting}[language=Python, caption=Creació tipus\_capsa]
+  tipus_capsa_folder = await create_content_in_container(
+        parent=obj,
+        type_="TipusCapsaFolder",
+        check_security=False,
+        id_="tipus_capsa",
+        title="Tipus capses' folder"
+    )
+    await notify(ObjectAddedEvent(tipus_capsa_folder, tipus_capsa_folder, tipus_capsa_folder.id))
+  \end{lstlisting}
+
+  Ara en el fitxer \textbf{content/reserves.py}, hem de definir el content de tipus
+  ReservesFolder. Per fer això descomentem el que hi ha entre
+  \textbf{TODO\_3} i \textbf{END\_TODO\_3}
+
+  \begin{lstlisting}[language=Python, caption=Configuració content ReservesFolder]
+  @configure.contenttype(
+    type_name="ReservesFolder",
+    schema=IReservesFolder,
+    behaviors=[
+        'guillotina.behaviors.dublincore.IDublinCore'
+    ],
+    allowed_types=["Reserva"],
+    globally_addable=False
+)
+class ReservesFolder(content.Folder):
+    async def get_reserves(self):
+        search_instance = query_utility(ICatalogUtility)
+        return search_instance.search({"type_name": "Reserva"})
+      \end{lstlisting}
+
+  Ara en el fitxer \textbf{content/tipus\_capsa.py}, hem de definir el content de tipus
+  TipusCapsaFolder. Per fer això descomentem el que hi ha entre
+  \textbf{TODO\_4} i \textbf{END\_TODO\_4}
+
+  \begin{lstlisting}[language=Python, caption=Configuració content ReservesFolder]
+    @configure.contenttype(
+    type_name="TipusCapsaFolder",
+    schema=ITipusCapsaFolder,
+    behaviors=[
+        'guillotina.behaviors.dublincore.IDublinCore'
+    ],
+    allowed_types=["TipusCapsa"],
+    globally_addable=False
+    )
+    class TipusCapsaFolder(content.Folder):
+    async def get_experiencies(self):
+        search_instance = query_utility(ICatalogUtility)
+        return await search_instance.search(
+            context=self,
+            query={"type_name": "Experiencia"}
+)
+\end{lstlisting}
+Aquest codi defineix el tipus TipusCapsaFolder, i també implementa la
+corutina get\_experiences, que fent servir el cataleg, fa una cerca per
+retornar totes les experiències de totes les capses
+  
+
+  Un cop descomentades les línies, podem passar el test que comprova
+  que ho hem fet correctament, en el directori de la carpeta
+  backend/fentpais, correm pytest:
+  \begin{lstlisting}[language=Python, caption=Testing 1]
+    DATABASE=pg pytest tests/test_container.py
+  \end{lstlisting}
+  
+  Aquest test crea un container i comprova que les carpetes s'han
+  creat correctament. Si passa el test, felicitats, les carpetes
+  reserves i tipus\_capsa han estat creades en la creació del
+  container. Si no és així, torneu a mirar les línies que estan dintre
+  dels blocs TODO\_1, TODO\_2, TODO\_3 i TODO\_4 container.py,
+  reserves.py i tipus\_capsa.py respectivament.
+
+\subsection{Creació d'una capsa dintre de la carpeta tipus\_capsa}
+En el fitxer \textbf{content/tipus\_capsa.py}, hem de definir el content de tipus
+  TipusCapsa. Per fer això descomentem el que hi ha entre
+  \textbf{TODO\_5} i \textbf{END\_TODO\_5}
+
+\begin{lstlisting}[language=Python, caption=Definició content type TipusCapsa]
+@configure.contenttype(
+    type_name="TipusCapsa",
+    schema=ITipusCapsa,
+    allowed_types=["Experiencia"],
+    behaviors=[
+        'guillotina.behaviors.dublincore.IDublinCore'
+    ],
+    globally_addable=False
+)
+class TipusCapsa(content.Folder):
+    async def get_experiencies(self):
+        search_instance = query_utility(ICatalogUtility)
+        return await search_instance.search(
+            context=self,
+            query={"type_name": "Experiencia", "metadata": "*"}
+)
+\end{lstlisting}
+
+Aquest codi defineix el tipus TipusCapsa, i també implementa la
+corutina get\_experiences, que fent servir el cataleg, fa una cerca per
+retornar les experiències que hi ha dintre de la capsa
+
+Un cop descomentades les línies, podem passar el test que comprova
+  que ho hem fet correctament, en el directori de la carpeta
+  backend/fentpais, correm pytest:
+  \begin{lstlisting}[language=Python, caption=Testing 2]
+    DATABASE=pg pytest tests/test_capsa.py -k test_creacio_capsa
+  \end{lstlisting}
+
+\subsection{Creació d'una experiència dintre d'una capsa}
+En el fitxer \textbf{content/experiencia.py}, hem de definir el content de tipus
+  TipusCapsa. Per fer això descomentem el que hi ha entre
+  \textbf{TODO\_6} i \textbf{END\_TODO\_6}
+
+\begin{lstlisting}[language=Python, caption=Definició content type Experiencia]
+@configure.contenttype(
+    type_name="Experiencia",
+    schema=IExperiencia,
+    behaviors=[
+        'guillotina.behaviors.dublincore.IDublinCore'
+    ],
+    globally_addable=False
+)
+class Experiencia(content.Item):
+    pass
+\end{lstlisting}
+
+Un cop descomentades les línies, podem passar el test que comprova
+  que ho hem fet correctament, en el directori de la carpeta
+  backend/fentpais, correm pytest:
+  \begin{lstlisting}[language=Python, caption=Testing 3]
+    DATABASE=pg pytest tests/test_capsa.py -k test_creacio_experiencia
+  \end{lstlisting}
+
+\subsection{Creació dels endpoints @getExperiencies}
+En el fitxer \textbf{content/tipus\_capsa.py}, hem de definir els
+endpoints \textbf{@getExperiencies} descomentant les línies de codi
+entre els comentaris \textbf{TODO\_7} i \textbf{END\_TODO\_7}
+
+\begin{lstlisting}[language=Python, caption=Definició endpoints]
+@configure.service(context=ITipusCapsa, name="@getExperiences", method="GET", permission="guillotina.ViewContent")
+@configure.service(context=ITipusCapsaFolder, name="@getExperiences", method="GET", permission="guillotina.ViewContent")
+class GetExperiencesCapsa(Service):
+    async def __call__(self):
+        return await self.context.get_experiencies()
+\end{lstlisting}
+      
+El \textbf{@configure.service} defineix els endpoints per dos contexts
+diferents, un per la carpeta tipus\_capsa i capsa. Fixeu-vos en un
+detall, self.context pot ser un objecte de TipusCapsaFolder o
+TipusCapsa, com que hem implementat les dues corutines amb el mateix
+nom, podem aprofitar la mateixa crida get\_experiencies. Mireu també
+el permission: \textbf{guillotina.ViewContent}, només podrà cridar aquest
+endpoint qui tingui aquest permís.
+      
+      
+Un cop descomentades les línies, podem passar el test que comprova
+  que ho hem fet correctament, en el directori de la carpeta
+  backend/fentpais, correm pytest:
+\begin{lstlisting}[language=Python, caption=Testing 4]
+  DATABASE=pg pytest tests/test_capsa.py -k test_tipus_capsa_get_experiencies_endpoint
+\end{lstlisting}
+
+\subsection{Creació de les reserves}
+En el fitxer \textbf{content/reserves.py}, hem de definir el content Reserva, descomentant el codi entre
+\textbf{TODO\_8} i \textbf{END\_TODO\_8}
+
+\begin{lstlisting}[language=Python, caption=Definició content type Reserva]
+@configure.contenttype(
+    type_name="Reserva",
+    schema=IReserva,
+    behaviors=[
+        'guillotina.behaviors.dublincore.IDublinCore'
+    ],
+    globally_addable=False
+)
+class Reserva(content.Item):
+    async def check_tipus_capsa(self):
+        search_instance = query_utility(ICatalogUtility)
+        container = get_current_container()
+        tipus_capsa_folder = await container.async_get("tipus_capsa")
+        results = await search_instance.unrestrictedSearch(context=tipus_capsa_folder, query={"id": self.tipus_capsa})
+        if results["items_total"] == 0:
+            raise HTTPPreconditionFailed()
+\end{lstlisting}
+En el codi configurem el contingut Reserva, i creem un mètode que
+comprova que el camp tipus\_capsa, que és un id que referencia a una
+capsa, existeix. Si no existeix retornem un 412. Guillotina és
+transaccional, si aixequem una excepció, la transacció s'anul·la, i
+l'objecte no es crearà
+
+Si ho hem fet bé podrem passar el test:
+\begin{lstlisting}[language=Python, caption=Testing 5]
+  DATABASE=pg pytest tests/test_reserva.py -k test_creacio_experiencia_correcte
+\end{lstlisting}
+
+En el fitxer \textbf{content/reserves.py}, ara definirem el subscriber
+que comprova que quan es crea o es modifica una reserva, el
+tipus\_capsa és corecte. Descomentem el codi entre \textbf{TODO\_9} i
+\textbf{END\_TODO\_9}
+
+\begin{lstlisting}[language=Python, caption=Definició subscriber Reserva]
+@configure.subscriber(for_=(IReserva, IObjectAddedEvent))
+@configure.subscriber(for_=(IReserva, IObjectModifiedEvent))
+async def creacio_modificacio_reserva(obj, event):
+    await obj.check_tipus_capsa()
+  \end{lstlisting}
+
+Si ho hem fet bé podrem passar el test:
+\begin{lstlisting}[language=Python, caption=Testing 6]
+  DATABASE=pg pytest tests/test_reserva.py -k test_creacio_experiencia_412
+\end{lstlisting}
+
+          
+
+\pagebreak
+
+\section{Evaluation}
+
+We did some experiments \ldots
+
+\pagebreak
+
+\section{Conclusions and Future Work}
+
+From our experiments we can conclude that \ldots
+
+\bibliographystyle{abbrv}
+% \bibliography{references}  % need to put bibtex references in references.bib 
+\end{document}

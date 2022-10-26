@@ -14,7 +14,8 @@ async def test_creacio_capsa(fentpais):
             "id": "foo_tipus_capsa",
             "@type": "TipusCapsa",
             "nom": "tipus a",
-            "descripcio": "Aquesta capsa conté experiencies"
+            "descripcio": "Aquesta capsa conté experiencies",
+            "preu": 10.0
         })
     )
     assert status == 201
@@ -29,7 +30,8 @@ async def test_creacio_experiencia(fentpais):
             "id": "foo_tipus_capsa",
             "@type": "TipusCapsa",
             "nom": "tipus a",
-            "descripcio": "Aquesta capsa conté experiencies"
+            "descripcio": "Aquesta capsa conté experiencies",
+            "preu": 10.0
         })
     )
     assert status == 201
@@ -57,7 +59,8 @@ async def test_tipus_capsa_get_experiencies_endpoint(fentpais):
             "id": "foo_tipus_capsa",
             "@type": "TipusCapsa",
             "nom": "tipus a",
-            "descripcio": "Aquesta capsa conté experiencies"
+            "descripcio": "Aquesta capsa conté experiencies",
+            "preu": 10.0
         }),
         headers={"X-Wait": "10"}
     )
@@ -70,7 +73,8 @@ async def test_tipus_capsa_get_experiencies_endpoint(fentpais):
             "id": "foo_capsa_tipus2",
             "@type": "TipusCapsa",
             "nom": "tipus a",
-            "descripcio": "Aquesta capsa conté experiencies"
+            "descripcio": "Aquesta capsa conté experiencies",
+            "preu": 10.0
         }),
         headers={"X-Wait": "10"}
     )

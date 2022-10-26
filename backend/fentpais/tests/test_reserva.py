@@ -13,7 +13,8 @@ async def test_creacio_experiencia_correcte(fentpais):
             "id": "foo_tipus_capsa",
             "@type": "TipusCapsa",
             "nom": "tipus a",
-            "descripcio": "Aquesta capsa conté experiencies"
+            "descripcio": "Aquesta capsa conté experiencies",
+            "preu": 10.0
         })
     )
     assert status == 201
@@ -39,7 +40,8 @@ async def test_creacio_experiencia_412(fentpais):
             "id": "foo_tipus_capsa",
             "@type": "TipusCapsa",
             "nom": "tipus a",
-            "descripcio": "Aquesta capsa conté experiencies"
+            "descripcio": "Aquesta capsa conté experiencies",
+            "preu": 10.0
         })
     )
     assert status == 201
@@ -51,6 +53,7 @@ async def test_creacio_experiencia_412(fentpais):
             "id": "foo_reserva",
             "@type": "Reserva",
             "tipus_capsa": "foo_wrong_tipus_capsa",
+            "preu": 10.0
         })
     )
     assert status == 412
