@@ -62,7 +62,8 @@ experiències.
 
 \section{Entorn de treball}
 Farem servir un entorn virtual de python, necessitem python3, des del
-directori on hi ha \textbf{setup.py}.
+directori on hi ha \textbf{setup.py}. També heu de tenir docker
+instal·lat. \textbf{INSTAL·LEU} docker.
 
 \begin{lstlisting}[language=Python, caption=Entorn virtual]
   cd backend
@@ -255,10 +256,11 @@ Primer definirem quins tipus hi poden haver dintre del container. Com
 hem vist en els requeriments, les carpetes que podrem afegir són
 ReservesFolder i TipusCapsaFolder. Per fer-ho descomentarem les línies
 que hi ha entre el comentari \textbf{TODO\_1} i \textbf{END\_TODO\_1}
-del fitxer \textbf{container.py}, fent servir la directiva
-\textbf{{@}configure.contenttype} per configurar el tipus, el camp
-\textbf{allowed\_types}. El camp behaviors ens permet tenir camps
-extres que ja venen configurats pel mateix behavior.
+del fitxer \textbf{container.py}. El codi que descomentareu fa servir
+la directiva \textbf{{@}configure.contenttype} per configurar el
+tipus, el camp \textbf{allowed\_types}. El camp behaviors ens permet
+tenir camps extres que ja venen configurats pel mateix
+behavior. Aquest és una part del codi que descomentareu.
 
 \begin{lstlisting}[language=Python, caption=Definició container]
 @configure.contenttype(
@@ -360,7 +362,7 @@ Aquest codi defineix el tipus TipusCapsaFolder, i també implementa la
 corutina get\_experiences, que fent servir el cataleg, fa una cerca per
 retornar totes les experiències de totes les capses
   
-
+\subsubsection{Testing}
   Un cop descomentades les línies, podem passar el test que comprova
   que ho hem fet correctament, en el directori de la carpeta
   backend/fentpais, correm pytest:
@@ -403,6 +405,7 @@ Aquest codi defineix el tipus TipusCapsa, i també implementa la
 corutina get\_experiences, que fent servir el cataleg, fa una cerca per
 retornar les experiències que hi ha dintre de la capsa
 
+\subsubsection{Testing}
 Un cop descomentades les línies, podem passar el test que comprova
   que ho hem fet correctament, en el directori de la carpeta
   backend/fentpais, correm pytest:
@@ -428,6 +431,7 @@ class Experiencia(content.Item):
     pass
 \end{lstlisting}
 
+\subsubsection{Testing}
 Un cop descomentades les línies, podem passar el test que comprova
   que ho hem fet correctament, en el directori de la carpeta
   backend/fentpais, correm pytest:
@@ -456,7 +460,7 @@ nom, podem aprofitar la mateixa crida get\_experiencies. Mireu també
 el permission: \textbf{guillotina.ViewContent}, només podrà cridar aquest
 endpoint qui tingui aquest permís.
       
-      
+\subsubsection{Testing}
 Un cop descomentades les línies, podem passar el test que comprova
   que ho hem fet correctament, en el directori de la carpeta
   backend/fentpais, correm pytest:
@@ -492,6 +496,7 @@ capsa, existeix. Si no existeix retornem un 412. Guillotina és
 transaccional, si aixequem una excepció, la transacció s'anul·la, i
 l'objecte no es crearà
 
+\subsubsection{Testing}
 Si ho hem fet bé podrem passar el test:
 \begin{lstlisting}[language=Python, caption=Testing 5]
   DATABASE=pg pytest tests/test_reserva.py -k test_creacio_experiencia_correcte
@@ -509,12 +514,81 @@ async def creacio_modificacio_reserva(obj, event):
     await obj.check_tipus_capsa()
   \end{lstlisting}
 
+\subsubsection{Testing}
 Si ho hem fet bé podrem passar el test:
 \begin{lstlisting}[language=Python, caption=Testing 6]
   DATABASE=pg pytest tests/test_reserva.py -k test_creacio_experiencia_412
 \end{lstlisting}
 
-          
+
+\subsection{Permisos usuari}
+Qui pot fer què? és una pregunta molt important a l'hora de definir un
+projecte. En aquest cas, un usuari logejat pot fer:
+\begin{enumerate}
+\item \textbf{POT FER} GET de la carpeta tipus\_capsa, per veure totes les capses de la carpeta
+\item \textbf{NO POT FER} GET de la carpeta reserves, no pot veure el llistat de reserves
+\item \textbf{POT FER} GET de la seva reserva
+\item \textbf{POT FER} GET d'una capsa
+\item \textbf{POT FER} GET d'una experiència
+\end{enumerate}
+En el nostre cas, l'usuari tindrà el ROL \textbf{guillotina.Member},
+un rol consta de N \textbf{permisos}. Els permisos bàsics són:
+
+\begin{enumerate}
+\item guillotina.AccessContent. És l'heterònim de la comanda ls en UNIX. No permet fer GET del propi objecte, però permet navegar entre la carpeta. Per exemple, si tenim aquest permís a la carpeta reserves db/container/reserves/la\_meva\_reserva, i tenim el permís guillotina.ViewContent en la\_meva\_reserva Podrem fer un GET de la\_meva\_reserva, però no podrem fer un GET de reserves.
+\item guillotina.ViewContent. És l'heterònim de la comanda cd en UNIX. Podrem fer un GET del recurs
+\item guillotina.AddContent. Podem fER POST i crear contingut a la carpeta.
+\end{enumerate}
+
+Començarem donant permís de guillotina.AccessContent al container,
+tots els usuaris que tinguin el rol: guillotina.Member, per fer això
+descomentarem el codi entre \textbf{TODO\_10} i
+\textbf{END\_TODO\_10}, del fitxer
+\textbf{content/container.py}. Penseu també que podem fer que els
+permisos assignats a carpetes, s'heredin entre els seus fills.
+
+\begin{lstlisting}[language=Python, caption=Permisos container]
+ manage_roles_instance = IRolePermissionManager(obj)
+    manage_roles_instance.grant_permission_to_role_no_inherit("guillotina.AccessContent", "guillotina.Member")
+    manage_roles_instance.grant_permission_to_role("guillotina.AccessContent", "guillotina.Editor")
+    manage_roles_instance.grant_permission_to_role("guillotina.ViewContent", "guillotina.Editor")
+  \end{lstlisting}
+
+  El mètode grant\_permission\_to\_role\_no\_inherit només dona permís
+  a la carpeta, sense que els seus fils puguin heredar el permís del
+  pare, en canvi grant\_permission\_to\_role li dona el permís al
+  recurs i a tots els seus fills.
+
+  Fem el mateix per la carpeta reserves, diem que l'usuari pugui
+  afegir contingut a la carpeta, i que pugui accedir-hi, però que no pugui fer GET de la carpeta, ja que no li donem el permís guillotina.ViewContent
+\begin{lstlisting}[language=Python, caption=Permisos reserves]
+manage_roles_instance = IRolePermissionManager(reserves_folder)
+manage_roles_instance.grant_permission_to_role_no_inherit("guillotina.AccessContent", "guillotina.Member")
+manage_roles_instance.grant_permission_to_role_no_inherit("guillotina.AddContent", "guillotina.Member")
+\end{lstlisting}
+
+
+En canvi, per la carpeta tipus\_capsa, no deixem afegir contingut,
+però sí que pugui fer GET de la carpeta per veure tots les
+capses. Fixeu-vos que el mètode que fem servir és
+grant\_permission\_to\_role, que farà que també puguin fer GET de les
+experiències de dintre de les capses, ja que els permisos s'hereden
+entre els seus fills
+
+
+\begin{lstlisting}[language=Python, caption=Permisos tipus\_capsa]
+manage_roles_instance = IRolePermissionManager(tipus_capsa_folder)
+manage_roles_instance.grant_permission_to_role("guillotina.AccessContent", "guillotina.Member")
+manage_roles_instance.grant_permission_to_role("guillotina.ViewContent", "guillotina.Member")
+\end{lstlisting}
+
+
+\subsubsection{Testing}
+Si ho hem fet bé podrem passar el test:
+\begin{lstlisting}[language=Python, caption=Testing 7]
+  DATABASE=pg pytest tests/test_roles.py
+\end{lstlisting}
+
 
 \pagebreak
 

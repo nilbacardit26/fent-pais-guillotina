@@ -13,7 +13,9 @@ class IExperiencia(interfaces.IItem):
         title="Categories",
         description="Categories de la experiència",
         value_type=schema.TextLine(),
-        required=False
+        required=False,
+        missing_value=[],
+        default=[]
     )
 
 

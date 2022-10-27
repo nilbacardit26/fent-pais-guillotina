@@ -12,6 +12,7 @@ from guillotina.component import query_utility
 from guillotina.interfaces.catalog import ICatalogUtility
 from guillotina.utils import get_current_container
 
+
 # TODO_3
 # @configure.contenttype(
 #     type_name="ReservesFolder",
