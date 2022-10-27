@@ -11,7 +11,7 @@
 \usepackage[pdftex,bookmarks,colorlinks,breaklinks]{hyperref}  
 %\hypersetup{linkcolor=black,citecolor=black,filecolor=black,urlcolor=black} % black links, for printed output
 \usepackage{memhfixc} 
-\usepackage{pdfsync}  
+\usepackage{pdfsync}
 \usepackage{fancyhdr}
 \usepackage{listings}
 
@@ -62,15 +62,22 @@ experiències.
 
 \section{Entorn de treball}
 Farem servir un entorn virtual de python, necessitem python3, des del
-directori on hi ha setup.py.
+directori on hi ha \textbf{setup.py}.
 
 \begin{lstlisting}[language=Python, caption=Entorn virtual]
+  cd backend
   pytho3 -m venv venv
   source venv/bin/activate
   pip install -r requirements.txt
   pip install -r requirements-test.txt
   pip install -e .
 \end{lstlisting}
+Si teniu un error a l'hora d'instal·lar els requeriments, probablement
+haureu d'actuallitzar pip
+\begin{lstlisting}[language=Python, caption=Entorn virtual]
+  pip install --upgrade pip
+\end{lstlisting}
+
 
 Això instal·larà les dependències necessàries i el paquet de fentpais
 en mode desenvolupament. El codi està tot fet, només haureu d'anar
@@ -107,13 +114,13 @@ aquest cas farem servir la mateixa postgres.
 \begin{enumerate}
 \item Creació de la carpeta \textbf{db/container/tipus\_capsa} quan es crea el container
 \item Creació de la carpeta \textbf{db/container/reserves} quan es crea el container
-\item Creació de l'endpoint \@getExperiencies en el context de la
-  carpeta \\ \textbf{db/container/tipus\_capsa/\@getExperiencies}. Aquest
+\item Creació de l'endpoint {@}getExperiencies en el context de la
+  carpeta tipus\_capsa \\ \textbf{db/container/tipus\_capsa/{@}getExperiencies}. Aquest
   endpoint ha de retornar totes les experiències de tots els tipus
   de capsa
-\item Creació de l'endpoint @getExperiencies en el context de la
-  carpeta \\
-  \textbf{db/container/tipus\_cpasa/foo\_tipus\_capsa/\@getExperiencies}. Aquest
+\item Creació de l'endpoint {@}getExperiencies en el context de la
+  carpeta foo\_tipus\_capsa \\
+  \textbf{db/container/tipus\_cpasa/foo\_tipus\_capsa/{@}getExperiencies}. Aquest
   endpoint ha de retornar totes les experiències només de la capsa
   foo\_tipus\_capsa
 \item Quan es crea una reserva, comprovar que el tipus de capsa
@@ -249,7 +256,7 @@ hem vist en els requeriments, les carpetes que podrem afegir són
 ReservesFolder i TipusCapsaFolder. Per fer-ho descomentarem les línies
 que hi ha entre el comentari \textbf{TODO\_1} i \textbf{END\_TODO\_1}
 del fitxer \textbf{container.py}, fent servir la directiva
-\textbf{@configure.contenttype} per configurar el tipus, el camp
+\textbf{{@}configure.contenttype} per configurar el tipus, el camp
 \textbf{allowed\_types}. El camp behaviors ens permet tenir camps
 extres que ja venen configurats pel mateix behavior.
 
@@ -430,7 +437,7 @@ Un cop descomentades les línies, podem passar el test que comprova
 
 \subsection{Creació dels endpoints @getExperiencies}
 En el fitxer \textbf{content/tipus\_capsa.py}, hem de definir els
-endpoints \textbf{@getExperiencies} descomentant les línies de codi
+endpoints \textbf{{@}getExperiencies} descomentant les línies de codi
 entre els comentaris \textbf{TODO\_7} i \textbf{END\_TODO\_7}
 
 \begin{lstlisting}[language=Python, caption=Definició endpoints]
@@ -441,7 +448,7 @@ class GetExperiencesCapsa(Service):
         return await self.context.get_experiencies()
 \end{lstlisting}
       
-El \textbf{@configure.service} defineix els endpoints per dos contexts
+El \textbf{{@}configure.service} defineix els endpoints per dos contexts
 diferents, un per la carpeta tipus\_capsa i capsa. Fixeu-vos en un
 detall, self.context pot ser un objecte de TipusCapsaFolder o
 TipusCapsa, com que hem implementat les dues corutines amb el mateix
